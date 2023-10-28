@@ -1,0 +1,110 @@
+import requests, json
+import matplotlib.pyplot as plt
+
+class spt():
+        
+    def __init__(self) -> None:
+        self.host = "https://api.spacetraders.io/v2/"
+        self.headers = {}
+        self.headers['Content-Type'] = 'application/json'
+        self.headers['Accept-Language'] = 'en_US'
+        self.headers['Authorization'] = 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGlmaWVyIjoiVEVTVDEyMyIsInZlcnNpb24iOiJ2MiIsInJlc2V0X2RhdGUiOiIyMDIzLTEwLTIxIiwiaWF0IjoxNjk3OTE1MzY0LCJzdWIiOiJhZ2VudC10b2tlbiJ9.Vhaeb-ktFvKqKCLfO9TpMhrGqJp7NgmthZo3ZB7EzcEdQncHK7N7zfSqWXeF1jwNDrC7U1ZgKDRz-Psdm6vojfNCUmusUhWFKF6ypR0joyCTxoFUqo5FU8yKXdTHkVMBM2yh6Fyvb2g_DEBiaTgwWWgOpYDk9pzr4DwRtxbS3KYwgorLgE1mJNM69dKOEl4rHFePgLX4QqsBcim7F8Crhn-tWelF0nsAio__PuVDzrDPtBG53LZDAbYSbAOuy1U5cJmK5fCZUj4epf78Y9mVURUMgAoxa6IJJKtZ-LPOudscmh7QqcSDd1SyBCnLS8pg5KTTuOqKXB_B1_tm4hDapQ'
+
+    def get_agent(self):
+        response = requests.get(self.host + "/my/agent/", headers=self.headers)
+        
+        return response
+    
+    def get_systems(self):
+        """Get list of systems
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
+        response = requests.get(self.host + "/systems/", headers=self.headers)
+
+        return response
+
+    def get_waypoints(self, system_id:str):
+        """_summary_
+
+        Parameters
+        ----------
+        system_id : str
+            give the id of the system 
+
+        Returns
+        -------
+        response : <Response>
+            returns a HTTP response object
+        """
+        response = requests.get(self.host + "/systems/" + system_id + "/waypoints", headers=self.headers)
+
+        return response
+
+    def set_ship_orbit(self, ship_id:str):
+        """Sends a ship into orbit
+
+        Parameters
+        ----------
+        ship_id : str
+            Give the id of the ship that should be sent into orbit
+
+        Returns
+        -------
+        response : <Response>
+            returns a HTTP response object
+        """
+        response = requests.post(self.host + "/my/ships/" + ship_id + "/orbit", headers=self.headers)
+
+        return response
+    
+    def set_ship_mode(self, mode_id:str):
+        """Sets the mode of the ship
+ 
+
+        Parameters
+        ----------
+        mode_id : str
+        - The possible modes are:
+            - CRUISE: Cruise flight mode is the default mode for all ships. It consumes fuel at a normal rate and travels at a normal speed.
+            - BURN: Burn flight mode consumes fuel at a faster rate and travels at a faster speed.
+            - DRIFT: Drift flight mode consumes the least fuel and travels at a much slower speed. Drift mode is useful when your ship has run out of fuel and you need to conserve what little fuel you have left.
+            - STEALTH: Stealth flight mode runs with systems at a minimum, making it difficult to detect. It consumes fuel at a normal rate but travels at a reduced speed.
+
+        Returns
+        -------
+        response : <Response>
+            returns a HTTP response object
+        """
+        response = requests.post(self.host + "/my/ships/" + mode_id + "/orbit", headers=self.headers)
+
+        return response
+    
+
+
+def main():
+    spt_instance = spt()
+    response = spt_instance.get_systems()
+    res_dict = json.loads(response._content.decode('utf-8'))
+    name = []
+    x = []
+    y = []
+    print(len(res_dict['data']))
+    for system in range(len(res_dict['data'])):
+        name.append(res_dict['data'][system]['symbol'])
+        x.append(res_dict['data'][system]['x'])
+        y.append(res_dict['data'][system]['y'])
+
+    plt.scatter(x, y)
+
+    for i in range(len(name)):
+        plt.annotate(name[i], (x[i], y[i]))
+    plt.grid()
+    plt.show()
+    print(name)
+
+
+main()
