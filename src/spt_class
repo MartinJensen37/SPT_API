@@ -1,16 +1,42 @@
 import requests, json
 import matplotlib.pyplot as plt
 
-class spt():
+class spt_cls():
         
     def __init__(self) -> None:
         self.host = "https://api.spacetraders.io/v2/"
         self.headers = {}
         self.headers['Content-Type'] = 'application/json'
         self.headers['Accept-Language'] = 'en_US'
-        self.headers['Authorization'] = 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGlmaWVyIjoiVEVTVDEyMyIsInZlcnNpb24iOiJ2MiIsInJlc2V0X2RhdGUiOiIyMDIzLTEwLTIxIiwiaWF0IjoxNjk3OTE1MzY0LCJzdWIiOiJhZ2VudC10b2tlbiJ9.Vhaeb-ktFvKqKCLfO9TpMhrGqJp7NgmthZo3ZB7EzcEdQncHK7N7zfSqWXeF1jwNDrC7U1ZgKDRz-Psdm6vojfNCUmusUhWFKF6ypR0joyCTxoFUqo5FU8yKXdTHkVMBM2yh6Fyvb2g_DEBiaTgwWWgOpYDk9pzr4DwRtxbS3KYwgorLgE1mJNM69dKOEl4rHFePgLX4QqsBcim7F8Crhn-tWelF0nsAio__PuVDzrDPtBG53LZDAbYSbAOuy1U5cJmK5fCZUj4epf78Y9mVURUMgAoxa6IJJKtZ-LPOudscmh7QqcSDd1SyBCnLS8pg5KTTuOqKXB_B1_tm4hDapQ'
+        with open("API_key.txt", "r") as api_key_file:
+            self.headers['Authorization'] = 'Bearer ' + api_key_file.read()
+        check_agent = self.get_agent()
+
+        if check_agent.status_code == 401: # Check if an agent exsist and otherwise generate a new API key
+            api_key = self.create_agent()
+            decoded = api_key.json()
+            self.headers['Authorization'] = decoded['data']['token']
+            with open("API_key.txt", "w") as api_key_file:
+                api_key_file.write(decoded['data']['token'])
+                api_key_file.close()
+
+    def create_agent(self):
+        data = {"symbol": "name1245687", # Pick a faction and a name for the agent
+                "faction": "COSMIC"}
+
+        response = requests.post(self.host + "/register", headers={'Content-Type': 'application/json'}, json=data)
+        print(type(response), "response type")
+        return response
 
     def get_agent(self):
+        """Get agent information
+
+        Returns
+        -------
+        response : <Response>
+            returns a HTTP response object
+        """
+
         response = requests.get(self.host + "/my/agent/", headers=self.headers)
         
         return response
@@ -20,15 +46,16 @@ class spt():
 
         Returns
         -------
-        _type_
-            _description_
+        response : <Response>
+            returns a HTTP response object
         """
+
         response = requests.get(self.host + "/systems/", headers=self.headers)
 
         return response
 
     def get_waypoints(self, system_id:str):
-        """_summary_
+        """Get waypoints from a certain system
 
         Parameters
         ----------
@@ -40,11 +67,12 @@ class spt():
         response : <Response>
             returns a HTTP response object
         """
+
         response = requests.get(self.host + "/systems/" + system_id + "/waypoints", headers=self.headers)
 
         return response
 
-    def set_ship_orbit(self, ship_id:str):
+    def ship_orbit(self, ship_id:str):
         """Sends a ship into orbit
 
         Parameters
@@ -57,7 +85,26 @@ class spt():
         response : <Response>
             returns a HTTP response object
         """
+
         response = requests.post(self.host + "/my/ships/" + ship_id + "/orbit", headers=self.headers)
+
+        return response
+    
+    def ship_dock(self, ship_id:str):
+        """Sends ship to dock
+
+        Parameters
+        ----------
+        ship_id : str
+            Give the id of the ship that should be docked
+
+        Returns
+        -------
+        response : <Response>
+            returns a HTTP response object
+        """
+
+        response = requests.post(self.host + "/my/ships/" + ship_id + "/dock", headers=self.headers)
 
         return response
     
@@ -82,29 +129,53 @@ class spt():
         response = requests.post(self.host + "/my/ships/" + mode_id + "/orbit", headers=self.headers)
 
         return response
+    def navigate_to_waypoint(self, ship_id:str, waypoint_symbol:str):
+        """Navigate a ship to a certain waypoint
+
+        Parameters
+        ----------
+        ship_id : str
+            Give the id of the ship that has to be sent
+        waypoint_symbol : str
+            Give the symbol for the desired waypoint 
+
+        Returns
+        -------
+        response : <Response>
+            returns a HTTP response object
+        """
+
+        data = {"waypointSymbol": waypoint_symbol}
+
+        response = requests.post(self.host + "/my/ships/" + ship_id + "/navigate", headers=self.headers, json=data)
+        return response
+    
+    def plot_systems(self):
+        """Plots all known systems in a scatter plot
+        """
+        response = self.get_systems()
+        res_dict = json.loads(response._content.decode('utf-8'))
+        name = []
+        x = []
+        y = []
+        for system in range(len(res_dict['data'])):
+            name.append(res_dict['data'][system]['symbol'])
+            x.append(res_dict['data'][system]['x'])
+            y.append(res_dict['data'][system]['y'])
+
+        plt.scatter(x, y)
+        for i in range(len(name)):
+            plt.annotate(name[i], (x[i], y[i]))
+        plt.grid()
+        plt.show()
+        print(name)
     
 
 
 def main():
-    spt_instance = spt()
+    spt_instance = spt_cls()
     response = spt_instance.get_systems()
-    res_dict = json.loads(response._content.decode('utf-8'))
-    name = []
-    x = []
-    y = []
-    print(len(res_dict['data']))
-    for system in range(len(res_dict['data'])):
-        name.append(res_dict['data'][system]['symbol'])
-        x.append(res_dict['data'][system]['x'])
-        y.append(res_dict['data'][system]['y'])
-
-    plt.scatter(x, y)
-
-    for i in range(len(name)):
-        plt.annotate(name[i], (x[i], y[i]))
-    plt.grid()
-    plt.show()
-    print(name)
+    print(response.json())
 
 
 main()
