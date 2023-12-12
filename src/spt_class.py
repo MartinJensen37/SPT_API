@@ -10,13 +10,14 @@ class spt_cls():
         self.headers['Content-Type'] = 'application/json'
         self.headers['Accept-Language'] = 'en_US'
 
-        if os.path.isfile("/API_key.txt") == False: # Check if API_key file exist, if not, create it
-            open("API_key.txt", "w")
+        if os.path.isfile(".\API_key.txt") == False: # Check if API_key file exist, if not, create it
+            f = open("API_key.txt", "w")
+            f.close()
 
-        with open("API_key.txt", "r") as api_key_file:
+        with open("API_key.txt", "r") as api_key_file: # read from the API_key file. 
             self.headers['Authorization'] = 'Bearer ' + api_key_file.read()
-        check_agent = self.get_agent()
 
+        check_agent = self.get_agent() # If this is old or empty the status code for the agent will be 401
         if check_agent.status_code == 401: # Check if an agent exist and otherwise generate a new API key
             api_key = self.create_agent()
             print(api_key.json())
@@ -27,7 +28,7 @@ class spt_cls():
                 api_key_file.close()
 
     def create_agent(self):
-        data = {"symbol": "Space-man169", # Pick a faction and a name for the agent
+        data = {"symbol": "agent-name", # Pick a faction and a name for the agent
                 "faction": "COSMIC"}
 
         response = requests.post(self.host + "/register", headers={'Content-Type': 'application/json'}, json=data)
@@ -174,14 +175,11 @@ class spt_cls():
             plt.annotate(name[i], (x[i], y[i]))
         plt.grid()
         plt.show()
-        print(name)
 
 
 def main():
     spt_instance = spt_cls()
-    response = spt_instance.get_systems()
     spt_instance.plot_systems()
-    print(response.json())
 
 
 main()
