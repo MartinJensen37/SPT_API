@@ -178,8 +178,9 @@ class spt_cls():
 
 
 def main():
+    print("Running from class file!")
     spt_instance = spt_cls()
     spt_instance.plot_systems()
 
-
-main()
+if __name__=="__main__":
+    main()
