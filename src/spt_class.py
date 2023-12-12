@@ -1,5 +1,6 @@
 import requests, json
 import matplotlib.pyplot as plt
+import os
 
 class spt_cls():
         
@@ -8,12 +9,17 @@ class spt_cls():
         self.headers = {}
         self.headers['Content-Type'] = 'application/json'
         self.headers['Accept-Language'] = 'en_US'
+
+        if os.path.isfile("/API_key.txt") == False: # Check if API_key file exist, if not, create it
+            open("API_key.txt", "w")
+
         with open("API_key.txt", "r") as api_key_file:
             self.headers['Authorization'] = 'Bearer ' + api_key_file.read()
         check_agent = self.get_agent()
 
         if check_agent.status_code == 401: # Check if an agent exist and otherwise generate a new API key
             api_key = self.create_agent()
+            print(api_key.json())
             decoded = api_key.json()
             self.headers['Authorization'] = decoded['data']['token']
             with open("API_key.txt", "w") as api_key_file:
@@ -21,7 +27,7 @@ class spt_cls():
                 api_key_file.close()
 
     def create_agent(self):
-        data = {"symbol": "name1245687", # Pick a faction and a name for the agent
+        data = {"symbol": "Space-man169", # Pick a faction and a name for the agent
                 "faction": "COSMIC"}
 
         response = requests.post(self.host + "/register", headers={'Content-Type': 'application/json'}, json=data)
