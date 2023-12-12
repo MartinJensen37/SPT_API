@@ -12,7 +12,7 @@ class spt_cls():
             self.headers['Authorization'] = 'Bearer ' + api_key_file.read()
         check_agent = self.get_agent()
 
-        if check_agent.status_code == 401: # Check if an agent exsist and otherwise generate a new API key
+        if check_agent.status_code == 401: # Check if an agent exist and otherwise generate a new API key
             api_key = self.create_agent()
             decoded = api_key.json()
             self.headers['Authorization'] = decoded['data']['token']
@@ -169,12 +169,12 @@ class spt_cls():
         plt.grid()
         plt.show()
         print(name)
-    
 
 
 def main():
     spt_instance = spt_cls()
     response = spt_instance.get_systems()
+    spt_instance.plot_systems()
     print(response.json())
 
 
